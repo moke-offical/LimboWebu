@@ -3,7 +3,7 @@ apply plugin: "com.android.application"
 android {
 	buildToolsVersion "30.0.1"
 	compileSdkVersion 30
-	
+
 	namespace "com.max2idea.android.limbo"
 	defaultConfig {
 		applicationId "com.max2idea.android.limbo"
@@ -11,15 +11,21 @@ android {
 		targetSdkVersion 30
 		versionCode 60100
 		versionName "6.01-dev"
+		ndk { abiFilters "armeabi-v7a","arm64-v8a", "x86", "x86_64" }
 	}
-	
+//    externalNativeBuild {
+//        ndkBuild {
+//            path 'src/main/jni/Android.mk'
+//        }
+//    }
+
 	// ecj模式(设置 -> 实验室 -> ecj)设置Java语法版本
 	compileOptions {
 		// AIDE+最高支持23，gradle 8.5仅到17
 		sourceCompatibility JavaVersion.VERSION_1_8
 		targetCompatibility JavaVersion.VERSION_1_8
 	}
-	
+
 	// 签名文件配置
 	signingConfigs{
 		// release自行配置
@@ -36,7 +42,7 @@ android {
 			storeFile file("app-debug.jks")
 		}
 	}
-	
+
 	buildTypes {
 		// 仅支持配置release(但不分是否是 release)
 		// 仅当值为true时启用
@@ -48,7 +54,21 @@ android {
 			// 代码混淆配置文件
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
+		debug {
+            jniDebuggable true
+        }
 	}
+
+	lintOptions {
+        abortOnError false
+        disable 'MissingTranslation'
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
 	
 	// viewBinding配置
 	buildFeatures{
@@ -73,4 +93,10 @@ dependencies {
 	runtimeOnly fileTree(dir: 'runtime', include: ['*.jar'])
 	// 仅编译 与 gradle一致
 	compileOnly fileTree(dir: 'provider', include: ['.jar'])
+}
+
+tasks.all { task ->
+    if (task.name.startsWith('compile') && task.name.endsWith('Ndk')) {
+        task.enabled = false
+    }
 }
